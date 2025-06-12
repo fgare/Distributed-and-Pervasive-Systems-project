@@ -26,7 +26,7 @@ public class DataPoint implements Comparable<DataPoint> {
     @Override
     public int compareTo(DataPoint other) {
         if (this.timestamp < other.timestamp) return -1;
-        else if (this.timestamp > other.timestamp) return 1;
+        if (this.timestamp > other.timestamp) return 1;
         else return 0;
     }
 

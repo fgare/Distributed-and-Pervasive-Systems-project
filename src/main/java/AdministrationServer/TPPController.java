@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/ThermalPowerPlants")
@@ -19,12 +20,16 @@ public class TPPController {
 
     @GetMapping
     public ResponseEntity<List<ThermalPowerPlant>> getAllPowerPlants() {
-        return ResponseEntity.ok(tppService.getAll());
+        return ResponseEntity.ok(tppService.getAllPlants());
     }
 
     @GetMapping("/averagePullition")
-    public ResponseEntity<Float> getAveragePullition() {
-        //TODO
+    public ResponseEntity<Map<Integer,Float>> getAveragePollution(@RequestParam Long start, @RequestParam Long end) {
+        try {
+            return ResponseEntity.ok(tppService.averagePollution(start, end));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**
@@ -35,7 +40,7 @@ public class TPPController {
     @PostMapping("/add")
     public ResponseEntity<Void> addPowerPlant(@RequestBody ThermalPowerPlant plant) {
         try {
-            tppService.add(plant);
+            tppService.addPlant(plant);
             return ResponseEntity.ok().build();
         } catch (IdAlreadyExistsException ex) {
             return ResponseEntity

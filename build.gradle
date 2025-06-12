@@ -32,7 +32,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
 
-
     // MQTT Dependencies
     // https://mvnrepository.com/artifact/org.eclipse.paho/org.eclipse.paho.client.mqttv3
     implementation group: 'org.eclipse.paho', name: 'org.eclipse.paho.client.mqttv3', version: '1.2.5'
@@ -70,4 +69,9 @@ protobuf {
 
 test {
     useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }

@@ -1,25 +1,21 @@
 package AdministrationServer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.ThemeResolver;
 
 @Service
 public class TPPService {
-    private final ThemeResolver themeResolver;
     private final HashMap<Integer, ThermalPowerPlant> powerPlantsList;
 
-    public TPPService(ThemeResolver themeResolver) {
+    public TPPService() {
         powerPlantsList = new HashMap<>(10);
-        this.themeResolver = themeResolver;
     }
 
-    public synchronized List<ThermalPowerPlant> getAll() {
+    public synchronized List<ThermalPowerPlant> getAllPlants() {
         return new ArrayList<>(powerPlantsList.values());
     }
 
@@ -29,11 +25,30 @@ public class TPPService {
      * @param plant Centrale termica da aggiungere.
      * @throws IdAlreadyExistsException Se è già presente una centrale con lo stesso id.
      */
-    public synchronized void add(ThermalPowerPlant plant) throws IdAlreadyExistsException {
+    public synchronized void addPlant(ThermalPowerPlant plant) throws IdAlreadyExistsException {
         if (powerPlantsList.containsKey(plant.getId()))
             throw new IdAlreadyExistsException("There is another ThermalPowerPlant with ID " + plant.getId());
 
         powerPlantsList.put(plant.getId(), plant);
+    }
+
+    /**
+     * Calcola la media di inquinamento per ciascuna centrale
+     * @param from inizio intervallo
+     * @param to fino intervallo
+     * @return mappa con (id centrale termica, valore di inquinamento medio)
+     */
+    public synchronized Map<Integer, Float> averagePollution(Long from, Long to) throws IllegalArgumentException {
+        // calcola la dimensione che permette di inserire tutte le centrali senza che la mappa debba ridimensionarsi
+        int mapDim = (int) (powerPlantsList.size()/0.75 + 1);
+        HashMap<Integer, Float> avgByPlant = new HashMap<>(mapDim);
+
+        for (ThermalPowerPlant plant: powerPlantsList.values()) {
+            Float value = plant.getAverageMeasurementBetween(from, to);
+            avgByPlant.put(plant.getId(), value);
+        }
+
+        return avgByPlant;
     }
 
 }

@@ -3,7 +3,6 @@ package AdministrationServer;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +12,7 @@ public class ThermalPowerPlant {
     private final Integer id;
     private final String ipAddress;
     private final Integer port;
-    private final ArrayList<DataPoint> pullutionMeasurements;
+    private final ArrayList<DataPoint> pollutionMeasurements;
     private final DataReceiver dataReceiver;
 
     @JsonCreator
@@ -24,8 +23,8 @@ public class ThermalPowerPlant {
         this.id = id;
         this.ipAddress = ipAddress;
         this.port = port;
-        pullutionMeasurements = new ArrayList<>();
-        dataReceiver = new DataReceiver(pullutionMeasurements);
+        pollutionMeasurements = new ArrayList<>();
+        dataReceiver = new DataReceiver(pollutionMeasurements);
     }
 
     public Integer getId() {
@@ -45,9 +44,9 @@ public class ThermalPowerPlant {
      * @return lista di misure
      */
     public List<DataPoint> getAllPullutionMeasurements() {
-        synchronized (pullutionMeasurements) {
-            Collections.sort(pullutionMeasurements);
-            return pullutionMeasurements;
+        synchronized (pollutionMeasurements) {
+            Collections.sort(pollutionMeasurements);
+            return pollutionMeasurements;
         }
     }
 
@@ -58,12 +57,12 @@ public class ThermalPowerPlant {
      * @return valore medio di inquinamento
      * @throws IllegalArgumentException se gli estremi dell'intervallo non sono ordinati
      */
-    public float getAverageMeasurementBetween(Long from, Long to) throws IllegalArgumentException{
-        if (from > to) throw new IllegalArgumentException();
+    public Float getAverageMeasurementBetween(Long from, Long to) throws IllegalArgumentException{
+        if (from > to) throw new IllegalArgumentException("TO argument is greater than FROM");
 
-        synchronized (pullutionMeasurements) {
+        synchronized (pollutionMeasurements) {
             List<DataPoint> subList = extractSubListBetween(new DataPoint(from), new DataPoint(to));
-            return computeListAverageValue(subList);
+            return computeAveragePollutionValue(subList);
         }
     }
 
@@ -74,19 +73,19 @@ public class ThermalPowerPlant {
      * @return lista di elementi con timestamp all'interno dell'intervallo
      */
     private List<DataPoint> extractSubListBetween(DataPoint fromDP, DataPoint toDP) {
-        Collections.sort(pullutionMeasurements);
+        Collections.sort(pollutionMeasurements);
 
-        int startingIndex = Collections.binarySearch(pullutionMeasurements, fromDP);
+        int startingIndex = Collections.binarySearch(pollutionMeasurements, fromDP);
         // calcola l'indice del primo timestamp maggiore del timestamp fornito
         if (startingIndex < 0) startingIndex= Math.abs(startingIndex)+1;
 
-        int endingIndex = Collections.binarySearch(pullutionMeasurements, toDP);
+        int endingIndex = Collections.binarySearch(pollutionMeasurements, toDP);
         if (endingIndex < 0) endingIndex = Math.abs(endingIndex)-1;
 
-        return pullutionMeasurements.subList(startingIndex, endingIndex);
+        return pollutionMeasurements.subList(startingIndex, endingIndex);
     }
 
-    private float computeListAverageValue(List<DataPoint> list) {
+    private Float computeAveragePollutionValue(List<DataPoint> list) {
         Integer sum = 0;
         for (DataPoint dataPoint : list) {
             sum += dataPoint.getValue();
@@ -94,9 +93,4 @@ public class ThermalPowerPlant {
         return (float) sum/list.size();
     }
 
-    public void publishMeasurement(DataPoint dataPoint) {
-        synchronized (pullutionMeasurements) {
-            pullutionMeasurements.add(dataPoint);
-        }
-    }
 }
