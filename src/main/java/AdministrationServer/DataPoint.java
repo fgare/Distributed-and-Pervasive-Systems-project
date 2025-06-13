@@ -30,4 +30,16 @@ public class DataPoint implements Comparable<DataPoint> {
         else return 0;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return timestamp.equals(((DataPoint) o).timestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        return timestamp.hashCode();
+    }
+
 }
