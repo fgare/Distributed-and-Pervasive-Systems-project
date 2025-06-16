@@ -1,4 +1,4 @@
-package AdministrationServer;
+package AdministrationServerPackage;
 
 import org.eclipse.paho.client.mqttv3.*;
 

@@ -1,4 +1,4 @@
-package Simulators;
+package SimulatorsPackage;
 
 public class PollutionSensor extends Simulator {
 

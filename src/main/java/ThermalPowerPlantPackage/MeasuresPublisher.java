@@ -1,8 +1,7 @@
-package ThermalPowerPlant;
+package ThermalPowerPlantPackage;
 
 import org.eclipse.paho.client.mqttv3.*;
 
-import java.util.TreeSet;
 
 class MeasuresPublisher {
     private MqttClient client;
@@ -38,5 +37,11 @@ class MeasuresPublisher {
         System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
     }
 
+    void publish (byte[] payload) throws MqttException {
+        MqttMessage message = new MqttMessage(payload);
+        message.setQos(qos);
+        client.publish(topic, message);
+        System.out.println(clientId + " Message " + message + " on topic " + topic + " - Thread PID: " + Thread.currentThread().getId());
+    }
 
 }

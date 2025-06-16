@@ -1,13 +1,13 @@
-package ThermalPowerPlant;
+package ThermalPowerPlantPackage;
 
-import Simulators.Buffer;
-import Simulators.Measurement;
-import io.opencensus.stats.Measure;
+import SimulatorsPackage.Buffer;
+import SimulatorsPackage.Measurement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MeasureManager implements Buffer {
@@ -33,24 +33,44 @@ public class MeasureManager implements Buffer {
     }
 
     private double computeAverage(Measurement[] measArray) {
+        if (measArray.length == 0) return 0;
+
         double sum = 0;
-        for (Measurement measurement : measArray) {
-            sum += measurement.getValue();
+        for (Measurement m : measArray) {
+            sum += m.getValue();
         }
         return sum / measArray.length;
     }
 
     @Override
     public void addMeasurement(Measurement m) {
-        synchronized (measurements) {
+        Measurement[] windowSnapshot = null; // memorizza lo stato attuale della finestra
+
+        synchronized (this) {
             measurements.addLast(m);
             freshMeasurements++;
 
+            // se si supera la dimensione della finestra, viene eliminato l'elemento più vecchio
             if (measurements.size() > windowDimension) measurements.removeFirst();
 
+            // dopo aver ottenuto overlapStep misure, viene generata una copia dell' array su cui calcolare la media
             if (freshMeasurements >= overlapStep) {
-                computeAverage(measurements.toArray(new Measurement[measurements.size()]));
-            }
+                windowSnapshot = measurements.toArray(new Measurement[measurements.size()]);
+            } else return;
+        }
+        // Se si prosegue è perchè si è entrati nell' if precedente. Si calcola quindi la media dei valori
+
+        double avg = computeAverage(windowSnapshot);
+        Measurement avgMeas = new Measurement("0", "CO2avg", avg, System.currentTimeMillis());
+
+        Gson gsonBuilder = new GsonBuilder().create();
+        String jsonString = gsonBuilder.toJson(avgMeas);
+
+        // pubblica il valore medio sul broker MQTT
+        try {
+            measuresPublisher.publish(jsonString.getBytes(StandardCharsets.UTF_8));
+        } catch(MqttException mqte) {
+            System.err.println("Could not publish measurements to MQTT broker");
         }
     }
 

@@ -1,4 +1,4 @@
-package AdministrationServer;
+package AdministrationServerPackage;
 
 public class IdAlreadyExistsException extends RuntimeException {
 

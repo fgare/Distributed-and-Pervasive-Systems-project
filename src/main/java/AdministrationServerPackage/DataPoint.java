@@ -1,4 +1,4 @@
-package AdministrationServer;
+package AdministrationServerPackage;
 
 
 public class DataPoint implements Comparable<DataPoint> {

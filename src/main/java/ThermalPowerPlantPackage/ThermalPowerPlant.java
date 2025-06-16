@@ -1,6 +1,7 @@
-package ThermalPowerPlant;
+package ThermalPowerPlantPackage;
 
-import AdministrationServer.IdAlreadyExistsException;
+import AdministrationServerPackage.IdAlreadyExistsException;
+import SimulatorsPackage.PollutionSensor;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
@@ -15,6 +16,7 @@ public class ThermalPowerPlant {
     private Integer id;
     private final String ipAddress;
     private final Integer port;
+
     private final MeasureManager measureManager;
 
     /**
@@ -36,7 +38,8 @@ public class ThermalPowerPlant {
         this.ipAddress = ipAddress;
         this.port = findAvailablePort();
         new ThermalInsertionHandler(this).publishPlant(); // prova a registrare la nuova centrale
-        measureManager = new MeasureManager()
+        measureManager = new MeasureManager(this, 8, (float) 0.5);
+        (new PollutionSensor(measureManager)).start(); // avvia il simulatore di inquinamento
     }
 
     private ThermalPowerPlant(Integer id) throws IOException, IdAlreadyExistsException {

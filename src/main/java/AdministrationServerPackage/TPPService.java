@@ -1,4 +1,4 @@
-package AdministrationServer;
+package AdministrationServerPackage;
 
 import java.util.ArrayList;
 import java.util.HashMap;

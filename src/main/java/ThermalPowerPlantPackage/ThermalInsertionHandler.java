@@ -1,6 +1,6 @@
-package ThermalPowerPlant;
+package ThermalPowerPlantPackage;
 
-import AdministrationServer.IdAlreadyExistsException;
+import AdministrationServerPackage.IdAlreadyExistsException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
