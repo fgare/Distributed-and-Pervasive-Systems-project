@@ -6,15 +6,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 
 
-public class ThermalPowerPlant {
+public class VirtualThermalPowerPlant {
     private final Integer id;
     private final String ipAddress;
     private final Integer port;
     private final TreeSet<DataPoint> pollutionMeasurements;
-    private DataReceiver dataReceiver;
+    private final DataReceiver dataReceiver;
 
     @JsonCreator
-    public ThermalPowerPlant(
+    public VirtualThermalPowerPlant(
             @JsonProperty("id") Integer id,
             @JsonProperty("ip") String ipAddress,
             @JsonProperty("port") Integer port) {
@@ -23,7 +23,7 @@ public class ThermalPowerPlant {
         this.port = port;
         pollutionMeasurements = new TreeSet<>();
         dataReceiver = new DataReceiver(pollutionMeasurements, id);
-        dataReceiver.run();
+        new Thread(dataReceiver).start();
     }
 
     public Integer getId() {
@@ -42,7 +42,7 @@ public class ThermalPowerPlant {
      * Ritorna tutte le misure presenti
      * @return lista di misure
      */
-    public SortedSet<DataPoint> getAllPullutionMeasurements() {
+    public SortedSet<DataPoint> getAllPollutionMeasurements() {
         synchronized (pollutionMeasurements) {
             return pollutionMeasurements;
         }

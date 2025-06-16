@@ -16,7 +16,7 @@ public class DataReceiver implements Runnable {
     private final TreeSet<DataPoint> measurements;
 
     public DataReceiver(TreeSet<DataPoint> measurements, Integer plantID) {
-        mqttTopic = "plants/co2/plant" + plantID;
+        mqttTopic = "co2/plant" + plantID;
         this.measurements = measurements;
     }
 
@@ -52,7 +52,7 @@ public class DataReceiver implements Runnable {
 
                                @Override
                                public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-                                   Long timestamp = Duration.between(LocalTime.MIDNIGHT, LocalDateTime.now()).getSeconds();
+                                   Long timestamp = Duration.between(LocalTime.MIDNIGHT, LocalDateTime.now()).getSeconds(); //TODO  devono essere millisecondi
                                    Integer receivedValue = Integer.valueOf(new String(mqttMessage.getPayload()));
 
                                    // aggiunge la nuova misura nell'insieme

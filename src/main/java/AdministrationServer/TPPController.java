@@ -19,7 +19,7 @@ public class TPPController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ThermalPowerPlant>> getAllPowerPlants() {
+    public ResponseEntity<List<VirtualThermalPowerPlant>> getAllPowerPlants() {
         return ResponseEntity.ok(tppService.getAllPlants());
     }
 
@@ -38,7 +38,7 @@ public class TPPController {
      * @return
      */
     @PostMapping("/add")
-    public ResponseEntity<Void> addPowerPlant(@RequestBody ThermalPowerPlant plant) {
+    public ResponseEntity<Void> addPowerPlant(@RequestBody VirtualThermalPowerPlant plant) {
         try {
             tppService.addPlant(plant);
             return ResponseEntity.ok().build();

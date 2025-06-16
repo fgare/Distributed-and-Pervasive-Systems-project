@@ -7,7 +7,7 @@ public class MqttPublisherTest {
         MqttClient client;
         String broker = "tcp://localhost:1883";
         String clientId = MqttClient.generateClientId();
-        String topic = "plants/co2/plant1";
+        String topic = "co2/plant1";
         int qos = 2;
 
         try {
@@ -65,7 +65,7 @@ public class MqttPublisherTest {
 
 
 
-        } catch (MqttException me ) {
+        } catch (MqttException me) {
             System.out.println("reason " + me.getReasonCode());
             System.out.println("msg " + me.getMessage());
             System.out.println("loc " + me.getLocalizedMessage());

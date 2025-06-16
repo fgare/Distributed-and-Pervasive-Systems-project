@@ -9,13 +9,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TPPService {
-    private final HashMap<Integer, ThermalPowerPlant> powerPlantsList;
+    private final HashMap<Integer, VirtualThermalPowerPlant> powerPlantsList;
 
     public TPPService() {
         powerPlantsList = new HashMap<>(10);
     }
 
-    public synchronized List<ThermalPowerPlant> getAllPlants() {
+    public synchronized List<VirtualThermalPowerPlant> getAllPlants() {
         return new ArrayList<>(powerPlantsList.values());
     }
 
@@ -25,9 +25,9 @@ public class TPPService {
      * @param plant Centrale termica da aggiungere.
      * @throws IdAlreadyExistsException Se è già presente una centrale con lo stesso id.
      */
-    public synchronized void addPlant(ThermalPowerPlant plant) throws IdAlreadyExistsException {
+    public synchronized void addPlant(VirtualThermalPowerPlant plant) throws IdAlreadyExistsException {
         if (powerPlantsList.containsKey(plant.getId()))
-            throw new IdAlreadyExistsException("There is another ThermalPowerPlant with ID " + plant.getId());
+            throw new IdAlreadyExistsException(plant.getId());
 
         powerPlantsList.put(plant.getId(), plant);
     }
@@ -43,7 +43,7 @@ public class TPPService {
         int mapDim = (int) (powerPlantsList.size()/0.75 + 1);
         HashMap<Integer, Float> avgByPlant = new HashMap<>(mapDim);
 
-        for (ThermalPowerPlant plant: powerPlantsList.values()) {
+        for (VirtualThermalPowerPlant plant: powerPlantsList.values()) {
             Float value = plant.getAverageMeasurementBetween(from, to);
             avgByPlant.put(plant.getId(), value);
         }
