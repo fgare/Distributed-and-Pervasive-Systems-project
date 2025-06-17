@@ -4,11 +4,11 @@ import org.eclipse.paho.client.mqttv3.*;
 
 
 class MeasuresPublisher {
-    private MqttClient client;
-    private String broker =  "tcp://localhost:1883";
-    private String clientId;
-    private String topic;
-    private int qos = 2;
+    private final MqttClient client;
+    private final String broker =  "tcp://localhost:1883";
+    private final String clientId;
+    private final String topic;
+    private final int qos = 2;
 
     MeasuresPublisher (String topic) throws MqttException {
         clientId = MqttClient.generateClientId();

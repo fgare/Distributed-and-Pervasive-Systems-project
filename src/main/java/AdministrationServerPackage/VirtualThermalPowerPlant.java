@@ -1,5 +1,6 @@
 package AdministrationServerPackage;
 
+import SimulatorsPackage.Measurement;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,8 +11,7 @@ public class VirtualThermalPowerPlant {
     private final Integer id;
     private final String ipAddress;
     private final Integer port;
-    private final TreeSet<DataPoint> pollutionMeasurements;
-    private final DataReceiver dataReceiver;
+    private final TreeSet<Measurement> pollutionMeasurements;
 
     @JsonCreator
     public VirtualThermalPowerPlant(
@@ -22,8 +22,7 @@ public class VirtualThermalPowerPlant {
         this.ipAddress = ipAddress;
         this.port = port;
         pollutionMeasurements = new TreeSet<>();
-        dataReceiver = new DataReceiver(pollutionMeasurements, id);
-        new Thread(dataReceiver).start();
+        new Thread(new DataReceiver(pollutionMeasurements, id)).start();
     }
 
     public Integer getId() {
@@ -42,7 +41,7 @@ public class VirtualThermalPowerPlant {
      * Ritorna tutte le misure presenti
      * @return lista di misure
      */
-    public SortedSet<DataPoint> getAllPollutionMeasurements() {
+    public SortedSet<Measurement> getAllPollutionMeasurements() {
         synchronized (pollutionMeasurements) {
             return pollutionMeasurements;
         }
@@ -55,22 +54,22 @@ public class VirtualThermalPowerPlant {
      * @return valore medio di inquinamento
      */
     public Float getAverageMeasurementBetween(Long from, Long to) throws IllegalArgumentException {
-        DataPoint fromDP = new DataPoint(from);
-        DataPoint toDP = new DataPoint(to);
+        Measurement fromDP = new Measurement("0", "from", 0, from);
+        Measurement toDP = new Measurement("0", "to", 0, to);
         return getAverageMeasurementBetween(fromDP, toDP);
     }
 
-    public Float getAverageMeasurementBetween(DataPoint fromDP, DataPoint toDP) throws IllegalArgumentException {
+    public Float getAverageMeasurementBetween(Measurement fromMeas, Measurement toMeas) throws IllegalArgumentException {
         synchronized (pollutionMeasurements) {
-            NavigableSet<DataPoint> subSet = pollutionMeasurements.subSet(fromDP, true, toDP, true);
+            NavigableSet<Measurement> subSet = pollutionMeasurements.subSet(fromMeas, true, toMeas, true);
             return computeAveragePollutionValue(subSet);
         }
     }
 
-    private Float computeAveragePollutionValue(NavigableSet<DataPoint> set) {
-        Integer sum = 0;
-        for (DataPoint dataPoint : set) {
-            sum += dataPoint.getValue();
+    private Float computeAveragePollutionValue(NavigableSet<Measurement> set) {
+        double sum = 0;
+        for (Measurement m : set) {
+            sum += m.getValue();
         }
         return (float) sum/set.size();
     }

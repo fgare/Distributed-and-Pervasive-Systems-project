@@ -44,7 +44,7 @@ public class MeasureManager implements Buffer {
 
     @Override
     public void addMeasurement(Measurement m) {
-        Measurement[] windowSnapshot = null; // memorizza lo stato attuale della finestra
+        Measurement[] windowSnapshot; // memorizza lo stato attuale della finestra
 
         synchronized (this) {
             measurements.addLast(m);

@@ -2,10 +2,7 @@ package ThermalPowerPlantPackage;
 
 import AdministrationServerPackage.IdAlreadyExistsException;
 import SimulatorsPackage.PollutionSensor;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -42,23 +39,19 @@ public class ThermalPowerPlant {
         (new PollutionSensor(measureManager)).start(); // avvia il simulatore di inquinamento
     }
 
-    private ThermalPowerPlant(Integer id) throws IOException, IdAlreadyExistsException {
+    public ThermalPowerPlant(Integer id) throws IOException, IdAlreadyExistsException {
         this(id, "localhost");
     }
 
-    public Integer getPort() {
+    public synchronized Integer getPort() {
         return port;
     }
 
-    public Integer getId() {
+    public synchronized Integer getId() {
         return id;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getIpAddress() {
+    public synchronized String getIpAddress() {
         return ipAddress;
     }
 
@@ -71,6 +64,15 @@ public class ThermalPowerPlant {
         }
     }
 
+    public String toJsonString() {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(ThermalPowerPlant.class, new ThermalPowerPlantSerializer());
+        gsonBuilder.setPrettyPrinting();
+
+        Gson gson = gsonBuilder.create();
+        return gson.toJson(this);
+    }
+
 
     private static class ThermalPowerPlantSerializer implements JsonSerializer<ThermalPowerPlant> {
         @Override
@@ -81,6 +83,11 @@ public class ThermalPowerPlant {
             jsonObject.addProperty("port", tp.getPort());
             return jsonObject;
         }
+    }
+
+
+    public static void main (String[] args) throws IOException, IdAlreadyExistsException {
+        ThermalPowerPlant tpp = newThermalPowerPlant();
     }
 
 }

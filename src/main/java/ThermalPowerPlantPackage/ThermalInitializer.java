@@ -5,11 +5,13 @@ import java.io.IOException;
 public class ThermalInitializer {
 
     public static void main(String[] args) {
+        System.out.println("Creo classe");
+
         try {
-            ThermalPowerPlant p = ThermalPowerPlant.newThermalPowerPlant();
+            new ThermalPowerPlant(5);
         } catch (IOException e) {
             e.printStackTrace();
-            //throw new RuntimeException(e);
         }
+
     }
 }

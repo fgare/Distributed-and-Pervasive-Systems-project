@@ -1,10 +1,10 @@
 package AdministrationServerPackage;
 
+import SimulatorsPackage.Measurement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.eclipse.paho.client.mqttv3.*;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.TreeSet;
 
 /**
@@ -13,9 +13,9 @@ import java.util.TreeSet;
 public class DataReceiver implements Runnable {
     private MqttClient client;
     private final String mqttTopic;
-    private final TreeSet<DataPoint> measurements;
+    private final TreeSet<Measurement> measurements;
 
-    public DataReceiver(TreeSet<DataPoint> measurements, Integer plantID) {
+    public DataReceiver(TreeSet<Measurement> measurements, Integer plantID) {
         mqttTopic = "co2/plant" + plantID;
         this.measurements = measurements;
     }
@@ -27,7 +27,6 @@ public class DataReceiver implements Runnable {
      */
     private void connect() throws InterruptedException {
         String broker =  "tcp://localhost:1883";
-        System.out.println("Trying connection to MQTT broker");
         // prova la connessione al broker MQTT ogni 5 secondi
         while (client == null) {
             try {
@@ -39,7 +38,7 @@ public class DataReceiver implements Runnable {
                 connOpts.setKeepAliveInterval(10);
                 client.connect();
             } catch (MqttException e) {
-                Thread.sleep(5*1000);
+                Thread.sleep(5000);
             }
         }
         System.out.println("Mqtt client " + client.getClientId() + " connected to broker - Thread PID: " + Thread.currentThread().getId());
@@ -52,18 +51,18 @@ public class DataReceiver implements Runnable {
 
                                @Override
                                public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-                                   Long timestamp = Duration.between(LocalTime.MIDNIGHT, LocalDateTime.now()).getSeconds(); //TODO  devono essere millisecondi
-                                   Integer receivedValue = Integer.valueOf(new String(mqttMessage.getPayload()));
+                                   Gson gsonBuilder = new GsonBuilder().create();
+                                   Measurement meas = gsonBuilder.fromJson(String.valueOf(mqttMessage.getPayload()), Measurement.class);
 
                                    // aggiunge la nuova misura nell'insieme
                                    synchronized (measurements) {
-                                       measurements.add(new DataPoint(timestamp, receivedValue));
+                                       measurements.add(meas);
                                    }
 
                                    System.out.println(client.getClientId() +" received a Message! - Callback - Thread PID: " + Thread.currentThread().getId() +
-                                           "\n\tTime:    " + timestamp +
+                                           "\n\tTime:    " + meas.getTimestamp() +
                                            "\n\tTopic:   " + topic +
-                                           "\n\tMessage: " + receivedValue +
+                                           "\n\tMessage: " + meas.getValue() +
                                            "\n\tQoS:     " + mqttMessage.getQos() + "\n");
                                }
 

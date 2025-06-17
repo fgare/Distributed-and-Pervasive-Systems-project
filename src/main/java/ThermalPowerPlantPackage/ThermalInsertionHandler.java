@@ -7,6 +7,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+
 /**
  * Si occupa di registrare una centrale termica presso l'Administration server
  */
@@ -25,13 +27,17 @@ public class ThermalInsertionHandler {
      * @throws IdAlreadyExistsException Se ottiene una risposta di errore dal server. Significa che è già stata registrata una centrale con lo stesso id
      */
     public void publishPlant() throws IdAlreadyExistsException {
-        String postPath = "/plants/add";
+        String postPath = "/ThermalPowerPlants/add";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<ThermalPowerPlant> request = new HttpEntity<>(plant, headers);
+        HttpEntity<String> request = new HttpEntity<>(plant.toJsonString(), headers);
         ResponseEntity<Void> response = client.postForEntity(serverAddress+postPath, request, Void.class);
         if (!response.getStatusCode().is2xxSuccessful()) throw new IdAlreadyExistsException(plant.getId());
+    }
+
+    public static void main(String[] args) throws IdAlreadyExistsException, IOException {
+
     }
 
 }
