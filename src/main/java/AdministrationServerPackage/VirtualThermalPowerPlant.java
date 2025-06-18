@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 
 
-public class VirtualThermalPowerPlant {
+class VirtualThermalPowerPlant {
     private final Integer id;
     private final String ipAddress;
     private final Integer port;

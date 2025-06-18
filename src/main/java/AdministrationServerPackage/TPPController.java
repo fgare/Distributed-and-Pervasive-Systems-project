@@ -38,10 +38,10 @@ public class TPPController {
      * @return
      */
     @PostMapping("/add")
-    public ResponseEntity<Void> addPowerPlant(@RequestBody VirtualThermalPowerPlant plant) {
+    public ResponseEntity<String> addPowerPlant(@RequestBody VirtualThermalPowerPlant plant) {
         try {
-            tppService.addPlant(plant);
-            return ResponseEntity.ok().build();
+            String plantsList = tppService.addPlant(plant);
+            return ResponseEntity.ok(plantsList);
         } catch (IdAlreadyExistsException ex) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)

@@ -1,18 +1,19 @@
 package AdministrationServerPackage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import ThermalPowerPlantPackage.ThermalPowerPlant;
+import com.google.gson.*;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TPPService {
     private final HashMap<Integer, VirtualThermalPowerPlant> powerPlantsList;
+    private final Gson gson;
 
-    public TPPService() {
+    public TPPService(Gson gson) {
         powerPlantsList = new HashMap<>(10);
+        this.gson = gson;
     }
 
     public synchronized List<VirtualThermalPowerPlant> getAllPlants() {
@@ -25,11 +26,27 @@ public class TPPService {
      * @param plant Centrale termica da aggiungere.
      * @throws IdAlreadyExistsException Se è già presente una centrale con lo stesso id.
      */
-    public synchronized void addPlant(VirtualThermalPowerPlant plant) throws IdAlreadyExistsException {
+    public synchronized String addPlant(VirtualThermalPowerPlant plant) throws IdAlreadyExistsException {
         if (powerPlantsList.containsKey(plant.getId()))
             throw new IdAlreadyExistsException(plant.getId());
 
+        HashMap<Integer, VirtualThermalPowerPlant> oldMap = (HashMap<Integer, VirtualThermalPowerPlant>) powerPlantsList.clone();
+        // genera il json con l'elenco delle centrali registrate
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(VirtualThermalPowerPlant.class, new VirtualThermalPowerPlantSerializer());
+        gsonBuilder.setPrettyPrinting();
+        gsonBuilder.create();
+
+        JsonArray jsonArray = new JsonArray();
+        for (VirtualThermalPowerPlant p : oldMap.values()) {
+            JsonElement currentObject = gson.toJsonTree(p);
+            jsonArray.add(currentObject);
+        }
+
+        // aggiunge la nuova centrale
         powerPlantsList.put(plant.getId(), plant);
+
+        return gson.toJson(jsonArray);
     }
 
     /**
