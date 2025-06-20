@@ -14,11 +14,12 @@ import java.io.IOException;
  */
 public class ThermalInsertionHandler {
     private final ThermalPowerPlant plant;
-    private final String serverAddress = "http://localhost:8080";
+    private final String serverAddress;
     private final RestTemplate client;
 
-    public ThermalInsertionHandler(ThermalPowerPlant plant) {
+    public ThermalInsertionHandler(ThermalPowerPlant plant, String serverAddress, Integer serverPort) {
         this.plant = plant;
+        this.serverAddress = serverAddress + ":" + serverPort;
         client = new RestTemplate();
     }
 
@@ -34,6 +35,7 @@ public class ThermalInsertionHandler {
         HttpEntity<String> request = new HttpEntity<>(plant.toJsonString(), headers);
         ResponseEntity<Void> response = client.postForEntity(serverAddress+postPath, request, Void.class);
         if (!response.getStatusCode().is2xxSuccessful()) throw new IdAlreadyExistsException(plant.getId());
+        //TODO riceve una stringa JSON
     }
 
     public static void main(String[] args) throws IdAlreadyExistsException, IOException {

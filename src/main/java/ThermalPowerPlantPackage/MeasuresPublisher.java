@@ -1,19 +1,36 @@
 package ThermalPowerPlantPackage;
 
+import SimulatorsPackage.Measurement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.eclipse.paho.client.mqttv3.*;
 
+import java.nio.charset.StandardCharsets;
 
-class MeasuresPublisher {
-    private final MqttClient client;
-    private final String broker =  "tcp://localhost:1883";
+
+class MeasuresPublisher implements Runnable {
+    private MqttClient client;
     private final String clientId;
+    private final String broker;
     private final String topic;
     private final int qos = 2;
+    private final ShippingQueue queue;
+    private final ThermalPowerPlant plant;
 
-    MeasuresPublisher (String topic) throws MqttException {
-        clientId = MqttClient.generateClientId();
-        client = new MqttClient(broker, clientId);
+    MeasuresPublisher (String serverIp, String topic, ThermalPowerPlant plant, ShippingQueue queue) throws MqttException {
+        this.broker = "tcp://" + serverIp + ":1883";
         this.topic = topic;
+        this.queue = queue;
+        this.plant = plant;
+        clientId = MqttClient.generateClientId();
+        connect();
+        System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
+    }
+
+    void connect() throws MqttException {
+        client = new MqttClient(broker, clientId);
 
         MqttConnectOptions connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(true);
@@ -34,14 +51,50 @@ class MeasuresPublisher {
                 System.out.println(clientId + " Message delivered - Thread PID: " + Thread.currentThread().getId());
             }
         });
-        System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
     }
 
-    void publish (byte[] payload) throws MqttException {
+    private void publishData(byte[] payload) throws MqttException {
         MqttMessage message = new MqttMessage(payload);
         message.setQos(qos);
         client.publish(topic, message);
         System.out.println(clientId + " Message " + message + " on topic " + topic + " - Thread PID: " + Thread.currentThread().getId());
     }
 
+    /**
+     * Costruisce la stringa JSON, body della risposta
+     * @param data array di misure da inviare
+     * @return stringa JSON
+     */
+    private String buildPayload(Measurement[] data) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        // costruisce il json da pubblicare
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("plantId", plant.getId());
+        jsonObject.addProperty("timestamp", System.currentTimeMillis());
+
+        JsonArray jsonArray = new JsonArray();
+        for (Measurement m : data) {
+            jsonArray.add(gson.toJson(m));
+        }
+        jsonObject.add("data", jsonArray);
+
+        return jsonObject.toString();
+    }
+
+    @Override
+    public void run() {
+        // recupera i dati
+        Measurement[] data = queue.getAllAndClean();
+        if (data == null || data.length == 0) return;
+
+        String payload = buildPayload(data);
+
+        try {
+            publishData(payload.getBytes(StandardCharsets.UTF_8));
+            client.disconnect(); // terminata la pubblicazione, si disconnette dal broker
+        } catch (MqttException e) {
+            System.err.println("Error publishing data to MQTT broker: " + e.getMessage());
+        }
+    }
 }
