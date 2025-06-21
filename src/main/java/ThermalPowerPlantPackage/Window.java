@@ -10,6 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 class Window implements Buffer {
     private final Integer windowDim;
@@ -25,8 +28,7 @@ class Window implements Buffer {
         this.windowDim = windowDim;
         this.overlapStep = (int)(overlapFactor * windowDim);
         this.measArray = new ArrayDeque<>(windowDim);
-        this.shippingQueue = new ShippingQueue(plant.getIpAddress());
-        // TODO avviare esecutore thread ogni 10 s
+        this.shippingQueue = new ShippingQueue(plant.getIpAddress(), plant.getId());
     }
 
     private double computeAverage(Measurement[] array) {

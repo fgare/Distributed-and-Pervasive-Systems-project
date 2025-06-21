@@ -17,13 +17,13 @@ class MeasuresPublisher implements Runnable {
     private final String topic;
     private final int qos = 2;
     private final ShippingQueue queue;
-    private final ThermalPowerPlant plant;
+    private final Integer plantId;
 
-    MeasuresPublisher (String serverIp, String topic, ThermalPowerPlant plant, ShippingQueue queue) throws MqttException {
+    MeasuresPublisher (String serverIp, Integer plantId, ShippingQueue queue) throws MqttException {
         this.broker = "tcp://" + serverIp + ":1883";
-        this.topic = topic;
+        this.topic = "plants/plant" + plantId;
         this.queue = queue;
-        this.plant = plant;
+        this.plantId = plantId;
         clientId = MqttClient.generateClientId();
         connect();
         System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
@@ -70,7 +70,7 @@ class MeasuresPublisher implements Runnable {
 
         // costruisce il json da pubblicare
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("plantId", plant.getId());
+        jsonObject.addProperty("plantId", plantId);
         jsonObject.addProperty("timestamp", System.currentTimeMillis());
 
         JsonArray jsonArray = new JsonArray();
