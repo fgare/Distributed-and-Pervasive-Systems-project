@@ -21,12 +21,10 @@ class MeasuresPublisher implements Runnable {
 
     MeasuresPublisher (String serverIp, Integer plantId, ShippingQueue queue) throws MqttException {
         this.broker = "tcp://" + serverIp + ":1883";
-        this.topic = "plants/plant" + plantId;
+        this.topic = "CO2/plant" + plantId;
         this.queue = queue;
         this.plantId = plantId;
         clientId = MqttClient.generateClientId();
-        connect();
-        System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
     }
 
     void connect() throws MqttException {
@@ -51,6 +49,7 @@ class MeasuresPublisher implements Runnable {
                 System.out.println(clientId + " Message delivered - Thread PID: " + Thread.currentThread().getId());
             }
         });
+        System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
     }
 
     private void publishData(byte[] payload) throws MqttException {
@@ -87,6 +86,13 @@ class MeasuresPublisher implements Runnable {
         // recupera i dati
         Measurement[] data = queue.getAllAndClean();
         if (data == null || data.length == 0) return;
+
+        try {
+            connect();
+        } catch (MqttException e) {
+            System.err.println("Error connecting to MQTT broker: " + e.getMessage());
+            return;
+        }
 
         String payload = buildPayload(data);
 

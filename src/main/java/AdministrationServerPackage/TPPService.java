@@ -2,7 +2,6 @@ package AdministrationServerPackage;
 
 import java.util.*;
 
-import ThermalPowerPlantPackage.ThermalPowerPlant;
 import com.google.gson.*;
 import org.springframework.stereotype.Service;
 
@@ -35,11 +34,14 @@ public class TPPService {
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(VirtualThermalPowerPlant.class, new VirtualThermalPowerPlantSerializer());
         gsonBuilder.setPrettyPrinting();
-        gsonBuilder.create();
+        Gson gson = gsonBuilder.create();
 
         JsonArray jsonArray = new JsonArray();
         for (VirtualThermalPowerPlant p : oldMap.values()) {
-            JsonElement currentObject = gson.toJsonTree(p);
+            JsonObject currentObject = new JsonObject();
+            currentObject.addProperty("id", p.getId());
+            currentObject.addProperty("ip", p.getIpAddress());
+            currentObject.addProperty("port", p.getPort());
             jsonArray.add(currentObject);
         }
 

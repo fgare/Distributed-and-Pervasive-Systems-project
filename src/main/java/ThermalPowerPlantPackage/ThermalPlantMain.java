@@ -2,10 +2,9 @@ package ThermalPowerPlantPackage;
 
 import AdministrationServerPackage.IdAlreadyExistsException;
 
-import java.io.IOException;
 import java.util.Scanner;
 
-public class ThermalInitializer {
+public class ThermalPlantMain {
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);

@@ -2,17 +2,10 @@ package ThermalPowerPlantPackage;
 
 import SimulatorsPackage.Buffer;
 import SimulatorsPackage.Measurement;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.eclipse.paho.client.mqttv3.MqttException;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 class Window implements Buffer {
     private final Integer windowDim;

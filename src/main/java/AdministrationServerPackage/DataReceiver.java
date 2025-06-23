@@ -16,7 +16,8 @@ public class DataReceiver implements Runnable {
     private final TreeSet<Measurement> measurements;
 
     public DataReceiver(TreeSet<Measurement> measurements, Integer plantID) {
-        mqttTopic = "co2/plant" + plantID;
+        mqttTopic = "CO2/plant" + plantID;
+        // TODO possibile miglioramento. Una singola istanza che si iscrive a CO2/#
         this.measurements = measurements;
     }
 
