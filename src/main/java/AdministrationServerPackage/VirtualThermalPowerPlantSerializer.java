@@ -10,12 +10,12 @@ import java.lang.reflect.Type;
 class VirtualThermalPowerPlantSerializer implements JsonSerializer<VirtualThermalPowerPlant> {
 
     @Override
-    public JsonElement serialize(VirtualThermalPowerPlant virtualThermalPowerPlant, Type
+    public JsonElement serialize(VirtualThermalPowerPlant powerPlant, Type
     type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("id", virtualThermalPowerPlant.getId());
-        jsonObject.addProperty("ip", virtualThermalPowerPlant.getIpAddress());
-        jsonObject.addProperty("port", virtualThermalPowerPlant.getPort());
+        jsonObject.addProperty("id", powerPlant.getId());
+        jsonObject.addProperty("ip", powerPlant.getIpAddress());
+        jsonObject.addProperty("port", powerPlant.getPort());
         return jsonObject;
     }
 

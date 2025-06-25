@@ -17,7 +17,7 @@ public class PollutionSensor extends Simulator {
 
     @Override
     public void run() {
-
+        System.out.println("Avviato simulatore"); // rimuovere
         double i = rnd.nextInt();
         long waitingTime;
 

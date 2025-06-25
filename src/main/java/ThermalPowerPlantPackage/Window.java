@@ -2,6 +2,8 @@ package ThermalPowerPlantPackage;
 
 import SimulatorsPackage.Buffer;
 import SimulatorsPackage.Measurement;
+import SimulatorsPackage.PollutionSensor;
+import SimulatorsPackage.Simulator;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ class Window implements Buffer {
         synchronized (this) {
             measArray.addLast(m);
             freshMeas++;
+            System.out.println(this);
 
             // se si supera la dimensione della finestra, viene eliminato l'elemento più vecchio
             if (measArray.size() > windowDim) measArray.removeFirst();
@@ -64,4 +67,10 @@ class Window implements Buffer {
         freshMeas = 0;
         return measurementsList;
     }
+
+    @Override
+    public String toString() {
+        return "Window [" + measArray.size() + ", " + freshMeas + "]";
+    }
+
 }
