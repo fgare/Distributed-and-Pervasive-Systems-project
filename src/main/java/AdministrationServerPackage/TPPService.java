@@ -52,7 +52,7 @@ public class TPPService {
     /**
      * Calcola la media di inquinamento per ciascuna centrale
      * @param from inizio intervallo
-     * @param to fino intervallo
+     * @param to fine intervallo
      * @return mappa con (id centrale termica, valore di inquinamento medio)
      */
     public synchronized Map<Integer, Float> averagePollution(Long from, Long to) throws IllegalArgumentException {

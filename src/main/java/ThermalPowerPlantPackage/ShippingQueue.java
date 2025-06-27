@@ -13,12 +13,13 @@ import java.util.concurrent.TimeUnit;
  */
 class ShippingQueue {
     private final ArrayDeque<Measurement> queue;
+    private final ScheduledExecutorService scheduler;
 
     ShippingQueue(String serverAddress, Integer plantId) {
         this.queue = new ArrayDeque<>(10);
 
         // programma l'esecuzione del thread che pubblica i dati
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler = Executors.newScheduledThreadPool(1);
         try {
             scheduler.scheduleAtFixedRate(new MeasuresPublisher(serverAddress, plantId, this), 10, 10, TimeUnit.SECONDS);
         } catch (MqttException e) {

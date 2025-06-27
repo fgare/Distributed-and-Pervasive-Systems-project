@@ -33,7 +33,7 @@ class ThermalPlantPresenter {
      * @throws IdAlreadyExistsException Se ottiene una risposta di errore dal server. Significa che è già stata registrata una centrale con lo stesso id
      */
     List<OtherPlant> publishPlant() throws IdAlreadyExistsException {
-        String postPath = "/ThermalPowerPlants/add";
+        String postPath = "/ThermalPowerPlants";
         GsonBuilder gsonBuilder = new GsonBuilder()
                 .registerTypeAdapter(ThermalPowerPlant.class, new ThermalPowerPlantSerializer())
                 .setPrettyPrinting();

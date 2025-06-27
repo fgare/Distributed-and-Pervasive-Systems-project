@@ -43,7 +43,6 @@ class Window implements Buffer {
         synchronized (this) {
             measArray.addLast(m);
             freshMeas++;
-            System.out.println(this);
 
             // se si supera la dimensione della finestra, viene eliminato l'elemento più vecchio
             if (measArray.size() > windowDim) measArray.removeFirst();
@@ -52,12 +51,13 @@ class Window implements Buffer {
             if (freshMeas >= overlapStep) {
                 windowSnapshot = measArray.toArray(new Measurement[measArray.size()]);
             } else return;
+
+            // Se si prosegue è perchè si è entrati nell' if precedente. Si calcola quindi la media dei valori
+            freshMeas = 0; // resetta il contatore delle nuove misure
         }
-        // Se si prosegue è perchè si è entrati nell' if precedente. Si calcola quindi la media dei valori
 
         double avg = computeAverage(windowSnapshot);
-        Measurement avgMeas = new Measurement("0", "CO2avg", avg, System.currentTimeMillis());
-        shippingQueue.enqueue(avgMeas);
+        shippingQueue.enqueue(new Measurement("0", "CO2avg", avg, System.currentTimeMillis()));
     }
 
     @Override
@@ -70,7 +70,7 @@ class Window implements Buffer {
 
     @Override
     public String toString() {
-        return "Window [" + measArray.size() + ", " + freshMeas + "]";
+        return "Window [size: " + measArray.size() + ", fresh meas: " + freshMeas + "]";
     }
 
 }

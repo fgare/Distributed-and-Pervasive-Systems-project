@@ -28,10 +28,12 @@ public class TPPController {
         return new ResponseEntity<>(jsonBody, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/averagePullition")
+    @GetMapping("/averagePollition")
     public ResponseEntity<Map<Integer,Float>> getAveragePollution(@RequestParam Long start, @RequestParam Long end) {
         try {
-            return ResponseEntity.ok(tppService.averagePollution(start*1000, end*1000));
+            Map<Integer,Float> avg = tppService.averagePollution(start*1000, end*1000);
+            System.out.println(avg);
+            return ResponseEntity.ok(avg);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }

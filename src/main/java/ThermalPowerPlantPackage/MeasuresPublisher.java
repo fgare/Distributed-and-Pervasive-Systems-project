@@ -74,7 +74,7 @@ class MeasuresPublisher implements Runnable {
 
         JsonArray jsonArray = new JsonArray();
         for (Measurement m : data) {
-            jsonArray.add(gson.toJson(m));
+            jsonArray.add(gson.toJsonTree(m));
         }
         jsonObject.add("data", jsonArray);
 
