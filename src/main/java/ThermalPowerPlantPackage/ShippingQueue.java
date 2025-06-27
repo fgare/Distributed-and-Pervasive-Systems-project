@@ -20,11 +20,7 @@ class ShippingQueue {
 
         // programma l'esecuzione del thread che pubblica i dati
         scheduler = Executors.newScheduledThreadPool(1);
-        try {
-            scheduler.scheduleAtFixedRate(new MeasuresPublisher(serverAddress, plantId, this), 10, 10, TimeUnit.SECONDS);
-        } catch (MqttException e) {
-            System.err.println("Unable to connect to MQTT broker: " + e.getMessage());
-        }
+        scheduler.scheduleAtFixedRate(new MeasuresPublisher(serverAddress, plantId, this), 10, 10, TimeUnit.SECONDS);
     }
 
     synchronized void enqueue(Measurement m) {

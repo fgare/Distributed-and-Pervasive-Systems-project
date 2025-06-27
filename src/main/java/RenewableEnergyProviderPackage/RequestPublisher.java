@@ -1,4 +1,4 @@
-package ThermalPowerPlantPackage;
+package RenewableEnergyProviderPackage;
 
 import SimulatorsPackage.Measurement;
 import com.google.gson.Gson;
@@ -8,22 +8,19 @@ import com.google.gson.JsonObject;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
-
-class MeasuresPublisher implements Runnable {
-    private MqttClient client;
+class RequestPublisher implements Runnable {
+    private Integer energyQuantity = 0;
     private final String clientId;
+    private MqttClient client;
     private final String broker;
-    private final String topic;
+    private final String topic = "RenewableEnergyRequest";
     private final int qos = 2;
-    private final ShippingQueue queue;
-    private final Integer plantId;
 
-    MeasuresPublisher (String serverIp, Integer plantId, ShippingQueue queue) {
+
+    RequestPublisher(String serverIp) {
         this.broker = "tcp://" + serverIp + ":1883";
-        this.topic = "CO2/plant" + plantId;
-        this.queue = queue;
-        this.plantId = plantId;
         clientId = MqttClient.generateClientId();
     }
 
@@ -59,34 +56,18 @@ class MeasuresPublisher implements Runnable {
         System.out.println(clientId + " Message " + message + " on topic " + topic + " - Thread PID: " + Thread.currentThread().getId());
     }
 
-    /**
-     * Costruisce la stringa JSON, body della risposta
-     * @param data array di misure da inviare
-     * @return stringa JSON
-     */
-    private String buildPayload(Measurement[] data) {
+    private String buildPayload() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         // costruisce il json da pubblicare
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("plantId", plantId);
+        jsonObject.addProperty("energy", energyQuantity);
         jsonObject.addProperty("timestamp", System.currentTimeMillis());
-
-        JsonArray jsonArray = new JsonArray();
-        for (Measurement m : data) {
-            jsonArray.add(gson.toJsonTree(m));
-        }
-        jsonObject.add("data", jsonArray);
-
         return jsonObject.toString();
     }
 
     @Override
     public void run() {
-        // recupera i dati
-        Measurement[] data = queue.getAllAndClean();
-        if (data == null || data.length == 0) return;
-
         try {
             connect();
         } catch (MqttException e) {
@@ -94,13 +75,15 @@ class MeasuresPublisher implements Runnable {
             return;
         }
 
-        String payload = buildPayload(data);
+        energyQuantity = 5000 + new Random().nextInt(10000);
+        String payload = buildPayload();
 
         try {
             publishData(payload.getBytes(StandardCharsets.UTF_8));
-            client.disconnect(); // terminata la pubblicazione, si disconnette dal broker
+            client.disconnect();
         } catch (MqttException e) {
             System.err.println("Error publishing data to MQTT broker: " + e.getMessage());
         }
+
     }
 }

@@ -4,6 +4,7 @@ import AdministrationServerPackage.IdAlreadyExistsException;
 import SimulatorsPackage.PollutionSensor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 class ThermalPowerPlant {
@@ -17,7 +18,8 @@ class ThermalPowerPlant {
         this.id = plantId;
         this.ipAddress = clientAddress;
         this.port = clientPort;
-        otherPlants = new ArrayList<>(new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()); // prova a registrare la nuova centrale
+        otherPlants = new ArrayList<>(new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()); // prova a registrare la nuova centrale sul server
+        //TODO segnalare ad altre centrali
         this.window = new Window(this, 8, (float) 0.5);
         (new PollutionSensor(window)).start(); // avvia il simulatore di inquinamento
     }
@@ -36,6 +38,14 @@ class ThermalPowerPlant {
 
     synchronized String getIpAddress() {
         return ipAddress;
+    }
+
+    synchronized List<OtherPlant> getOtherPlants() {
+        return otherPlants;
+    }
+
+    synchronized boolean addOtherPlant(OtherPlant otherPlant) {
+        return otherPlants.add(otherPlant);
     }
 
 }
