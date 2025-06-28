@@ -1,11 +1,11 @@
 package ThermalPowerPlantPackage;
 
-class OtherPlant {
+public class OtherPlant {
     private final Integer id;
     private final String ipAddress;
     private final Integer port;
 
-    OtherPlant(Integer id, String ipAddress, Integer port) {
+    public OtherPlant(Integer id, String ipAddress, Integer port) {
         this.id = id;
         this.ipAddress = ipAddress;
         this.port = port;

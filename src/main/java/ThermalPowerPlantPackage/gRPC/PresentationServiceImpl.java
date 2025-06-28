@@ -1,7 +1,10 @@
-package ThermalPowerPlantPackage;
+package ThermalPowerPlantPackage.gRPC;
 
+import ThermalPowerPlantPackage.OtherPlant;
 import ThermalPowerPlantPackage.Presentation.IntroductionRequest;
 import ThermalPowerPlantPackage.Presentation.IntroductionResponse;
+import ThermalPowerPlantPackage.PresentationServiceGrpc;
+import ThermalPowerPlantPackage.ThermalPowerPlant;
 import io.grpc.stub.StreamObserver;
 
 class PresentationServiceImpl extends PresentationServiceGrpc.PresentationServiceImplBase {

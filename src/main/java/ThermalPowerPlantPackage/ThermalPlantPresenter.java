@@ -11,8 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Si occupa di registrare una centrale termica presso l'Administration server
@@ -32,7 +32,7 @@ class ThermalPlantPresenter {
      * Contatta l'Administration server e pubblicala nuova centrale
      * @throws IdAlreadyExistsException Se ottiene una risposta di errore dal server. Significa che è già stata registrata una centrale con lo stesso id
      */
-    List<OtherPlant> publishPlant() throws IdAlreadyExistsException {
+    Set<OtherPlant> publishPlant() throws IdAlreadyExistsException {
         String postPath = "/ThermalPowerPlants";
         GsonBuilder gsonBuilder = new GsonBuilder()
                 .registerTypeAdapter(ThermalPowerPlant.class, new ThermalPowerPlantSerializer())
@@ -50,9 +50,9 @@ class ThermalPlantPresenter {
         return getPlantsList(response.getBody());
     }
 
-    private ArrayList<OtherPlant> getPlantsList(String jsonString) {
+    private Set<OtherPlant> getPlantsList(String jsonString) {
         JsonArray jsonPlants = new JsonParser().parse(jsonString).getAsJsonArray();
-        ArrayList<OtherPlant> otherPlants = new ArrayList<>(jsonPlants.size());
+        Set<OtherPlant> otherPlants = new HashSet<>(jsonPlants.size());
 
         for (int i = 0; i < jsonPlants.size(); i++) {
             Integer id = jsonPlants.get(i).getAsJsonObject().get("id").getAsInt();

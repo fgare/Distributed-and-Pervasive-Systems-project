@@ -1,4 +1,4 @@
-package ThermalPowerPlantPackage;
+package ThermalPowerPlantPackage.Pollution;
 
 import SimulatorsPackage.Measurement;
 import com.google.gson.Gson;

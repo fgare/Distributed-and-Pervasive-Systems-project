@@ -1,5 +1,6 @@
-package ThermalPowerPlantPackage;
+package ThermalPowerPlantPackage.gRPC;
 
+import ThermalPowerPlantPackage.ThermalPowerPlant;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
@@ -19,5 +20,11 @@ class GrpcServerStarter {
         introServer.awaitTermination();
     }
 
-    //TODO metodo per avviare il server per l'elezione
+    void startElectionServer() throws IOException, InterruptedException {
+        Server electionServer = ServerBuilder.forPort(9000).addService(new ElectionServiceImpl(mainPlant)).build();
+        electionServer.start();
+        System.out.println("Election server started, listening on " + electionServer.getPort());
+        electionServer.awaitTermination();
+    }
+
 }

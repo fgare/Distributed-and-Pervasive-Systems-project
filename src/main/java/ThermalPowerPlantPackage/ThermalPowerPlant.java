@@ -2,50 +2,59 @@ package ThermalPowerPlantPackage;
 
 import AdministrationServerPackage.IdAlreadyExistsException;
 import SimulatorsPackage.PollutionSensor;
+import ThermalPowerPlantPackage.Pollution.Window;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 
-class ThermalPowerPlant {
+public class ThermalPowerPlant implements Comparable<ThermalPowerPlant> {
     private final Integer id;
     private final String ipAddress;
     private final Integer port;
     private final Window window;
-    private final ArrayList<OtherPlant> otherPlants;
+    private final TreeSet<OtherPlant> otherPlants;
 
-    ThermalPowerPlant(Integer plantId, String clientAddress, Integer clientPort, String serverAddress, Integer serverPort) throws IdAlreadyExistsException {
+    public ThermalPowerPlant(Integer plantId, String clientAddress, Integer clientPort, String serverAddress, Integer serverPort) throws IdAlreadyExistsException {
         this.id = plantId;
         this.ipAddress = clientAddress;
         this.port = clientPort;
-        otherPlants = new ArrayList<>(new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()); // prova a registrare la nuova centrale sul server
+        otherPlants = new TreeSet<>(new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()); // prova a registrare la nuova centrale sul server
         //TODO segnalare ad altre centrali
         this.window = new Window(this, 8, (float) 0.5);
         (new PollutionSensor(window)).start(); // avvia il simulatore di inquinamento
     }
 
-    ThermalPowerPlant(Integer id, Integer port) throws IdAlreadyExistsException {
+    public ThermalPowerPlant(Integer id, Integer port) throws IdAlreadyExistsException {
         this(id, "localhost", port, "localhost", 8080);
     }
 
-    synchronized Integer getPort() {
+    public synchronized Integer getPort() {
         return port;
     }
 
-    synchronized Integer getId() {
+    public synchronized Integer getId() {
         return id;
     }
 
-    synchronized String getIpAddress() {
+    public synchronized String getIpAddress() {
         return ipAddress;
     }
 
-    synchronized List<OtherPlant> getOtherPlants() {
+    public synchronized Set<OtherPlant> getOtherPlants() {
         return otherPlants;
     }
 
-    synchronized boolean addOtherPlant(OtherPlant otherPlant) {
+    public synchronized boolean addOtherPlant(OtherPlant otherPlant) {
         return otherPlants.add(otherPlant);
     }
 
+    public synchronized OtherPlant getPlantAsOtherPlant() {
+        return new OtherPlant(id, ipAddress, port);
+    }
+
+    @Override
+    public int compareTo(ThermalPowerPlant o) {
+        return this.id.compareTo(o.id);
+    }
 }

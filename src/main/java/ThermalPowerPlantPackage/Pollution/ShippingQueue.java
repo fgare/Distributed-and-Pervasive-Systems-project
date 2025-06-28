@@ -1,7 +1,6 @@
-package ThermalPowerPlantPackage;
+package ThermalPowerPlantPackage.Pollution;
 
 import SimulatorsPackage.Measurement;
-import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.Executors;

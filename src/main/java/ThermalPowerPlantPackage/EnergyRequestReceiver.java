@@ -1,16 +1,14 @@
 package ThermalPowerPlantPackage;
 
-import SimulatorsPackage.Measurement;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.eclipse.paho.client.mqttv3.*;
+
 
 class EnergyRequestReceiver implements Runnable {
     private MqttClient client;
     private final String topic = "RenewableEnergyRequest";
 
     private void connect() throws InterruptedException {
-        String broker =  "tcp://localhost:1883";
+        String broker = "tcp://localhost:1883";
         // prova la connessione al broker MQTT ogni 5 secondi
         while (client == null) {
             try {

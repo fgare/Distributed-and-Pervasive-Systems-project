@@ -1,22 +1,21 @@
-package ThermalPowerPlantPackage;
+package ThermalPowerPlantPackage.Pollution;
 
 import SimulatorsPackage.Buffer;
 import SimulatorsPackage.Measurement;
-import SimulatorsPackage.PollutionSensor;
-import SimulatorsPackage.Simulator;
+import ThermalPowerPlantPackage.ThermalPowerPlant;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
-class Window implements Buffer {
+public class Window implements Buffer {
     private final Integer windowDim;
     private final Integer overlapStep; // numero di valori che devono sovrapporsi tra una finestra e la successiva
     private final ArrayDeque<Measurement> measArray;
     private int freshMeas = 0;
     private final ShippingQueue shippingQueue;
 
-    Window(ThermalPowerPlant plant, int windowDim, float overlapFactor) throws IllegalArgumentException {
+    public Window(ThermalPowerPlant plant, int windowDim, float overlapFactor) throws IllegalArgumentException {
         if (windowDim < 0) throw new IllegalArgumentException("Window dimension must be non-negative");
         if (overlapFactor < 0 || overlapFactor > 1) throw new IllegalArgumentException("Overlap factor must be between 0 and 1");
 
