@@ -1,6 +1,6 @@
 package ThermalPowerPlantPackage.gRPC;
 
-import ThermalPowerPlantPackage.OtherPlant;
+import ThermalPowerPlantPackage.PlantInfo;
 import ThermalPowerPlantPackage.Presentation.IntroductionRequest;
 import ThermalPowerPlantPackage.Presentation.IntroductionResponse;
 import ThermalPowerPlantPackage.PresentationServiceGrpc;
@@ -20,9 +20,12 @@ class PresentationServiceImpl extends PresentationServiceGrpc.PresentationServic
         String ip = introRequest.getIp();
         int port = introRequest.getPort();
 
-        boolean result = mainPlant.addOtherPlant(new OtherPlant(id, ip, port));
+        boolean result = mainPlant.addColleaguePlant(new PlantInfo(id, ip, port));
 
-        IntroductionResponse response = IntroductionResponse.newBuilder().setSuccess(result).build();
+        IntroductionResponse response = IntroductionResponse
+                .newBuilder()
+                .setSuccess(result)
+                .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();

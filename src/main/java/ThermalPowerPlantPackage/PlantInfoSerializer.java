@@ -7,10 +7,10 @@ import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 
-class ThermalPowerPlantSerializer implements JsonSerializer<ThermalPowerPlant> {
+class PlantInfoSerializer implements JsonSerializer<PlantInfo> {
 
     @Override
-    public JsonElement serialize(ThermalPowerPlant tp, Type type, JsonSerializationContext jsonSerializationContext) {
+    public JsonElement serialize(PlantInfo tp, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("id", tp.getId());
         jsonObject.addProperty("ip", tp.getIpAddress());

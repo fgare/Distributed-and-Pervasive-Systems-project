@@ -1,15 +1,8 @@
-package RenewableEnergyProviderPackage;
+package ThermalPowerPlantPackage.gRPC;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import org.eclipse.paho.client.mqttv3.*;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
-
-class RequestPublisher implements Runnable {
-    private Integer energyQuantity = 0;
+class MqttTopicReset implements Runnable {
     private final String clientId;
     private MqttClient client;
     private final String broker;
@@ -17,7 +10,7 @@ class RequestPublisher implements Runnable {
     private final int qos = 2;
 
 
-    RequestPublisher(String serverIp) {
+    MqttTopicReset (String serverIp) {
         this.broker = "tcp://" + serverIp + ":1883";
         clientId = MqttClient.generateClientId();
     }
@@ -26,7 +19,7 @@ class RequestPublisher implements Runnable {
         client = new MqttClient(broker, clientId);
 
         MqttConnectOptions connOpts = new MqttConnectOptions();
-        connOpts.setCleanSession(true);
+        connOpts.setCleanSession(false);
         client.connect(connOpts);
         client.setCallback(new MqttCallback() {
             @Override
@@ -39,10 +32,10 @@ class RequestPublisher implements Runnable {
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-                System.out.println(clientId + " Message delivered - Thread PID: " + Thread.currentThread().getId());
+                System.out.println(clientId + " Topic reset - Thread PID: " + Thread.currentThread().getId());
             }
         });
-        System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
+        //System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
     }
 
     private void publishData(byte[] payload) throws MqttException {
@@ -51,16 +44,6 @@ class RequestPublisher implements Runnable {
         message.setQos(qos);
         client.publish(topic, message);
         System.out.println(clientId + " Message " + message + " on topic " + topic + " - Thread PID: " + Thread.currentThread().getId());
-    }
-
-    private String buildPayload() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-        // costruisce il json da pubblicare
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("energy", energyQuantity);
-        jsonObject.addProperty("timestamp", System.currentTimeMillis());
-        return jsonObject.toString();
     }
 
     @Override
@@ -73,11 +56,10 @@ class RequestPublisher implements Runnable {
             return;
         }
 
-        energyQuantity = 5000 + new Random().nextInt(10000); // valore tra 5000 e 15000
-        String payload = buildPayload();
+        byte[] payload = new byte[0];
 
         try {
-            publishData(payload.getBytes(StandardCharsets.UTF_8));
+            publishData(payload);
             client.disconnect();
         } catch (MqttException e) {
             System.err.println("Error publishing data to MQTT broker: " + e.getMessage());

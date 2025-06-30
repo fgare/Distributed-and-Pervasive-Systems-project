@@ -25,5 +25,13 @@ class APIClient {
         return gson.toJson(jsonElement);
     }
 
+    String getAverageEmissionLevel() throws RestClientException {
+        String getPath = "/ThermalPowerPlants/averagePollition";
+        ResponseEntity<String> response = client.getForEntity("http://"+serverAddress+getPath, String.class);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonElement jsonElement = new JsonParser().parse(response.getBody());
+        return gson.toJson(jsonElement);
+    }
+
 
 }

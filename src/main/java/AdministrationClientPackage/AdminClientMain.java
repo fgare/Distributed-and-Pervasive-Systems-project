@@ -35,6 +35,18 @@ public class AdminClientMain {
                     }
                     break;
                 case 2:
+                    System.out.print("Start: ");
+                    long start = scanner.nextLong();
+                    System.out.print("End: ");
+                    long end = scanner.nextLong();
+                    String s;
+                    try {
+                        s = new APIClient("localhost:8080").getAverageEmissionLevel();
+                    } catch (RestClientException e) {
+                        System.err.println("Bad request. Message: " + e.getMessage());
+                        break;
+                    }
+                    System.out.println(s);
                     break;
                 default:
                     System.err.println("Invalid input");

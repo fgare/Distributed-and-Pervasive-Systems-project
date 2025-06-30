@@ -1,7 +1,9 @@
 package ThermalPowerPlantPackage;
 
 import AdministrationServerPackage.IdAlreadyExistsException;
+import org.springframework.web.client.HttpStatusCodeException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class ThermalPlantMain {
@@ -40,6 +42,10 @@ public class ThermalPlantMain {
             new ThermalPowerPlant(plant, clientPort);
         } catch (IdAlreadyExistsException e) {
             System.err.println("Plant ID already exists");
+        } catch (HttpStatusCodeException statusExc) {
+            System.err.println("Unable to register the plant - HttpStatusCodeException: " + statusExc.getMessage());
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Unable to start gRPC server - IOException: " + e.getMessage());
         }
 
     }

@@ -12,9 +12,14 @@ message ElectionRequest {
   int32 starterId = 2;
   float price = 3; // prezzo offerto dalla centrale
   Status status = 4; // stato del sistema
+  int32 quantity = 5; // quantità di energia
 
 }
 
+message ElectionResponse {
+  bool success = 1;
+}
+
 service ElectionService {
-  rpc handleElection(ElectionRequest) returns (ElectionRequest);
+  rpc handleElection(ElectionRequest) returns (ElectionResponse);
 }

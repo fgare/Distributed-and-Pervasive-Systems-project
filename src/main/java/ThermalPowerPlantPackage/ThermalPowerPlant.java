@@ -3,58 +3,42 @@ package ThermalPowerPlantPackage;
 import AdministrationServerPackage.IdAlreadyExistsException;
 import SimulatorsPackage.PollutionSensor;
 import ThermalPowerPlantPackage.Pollution.Window;
+import ThermalPowerPlantPackage.gRPC.GrpcServerStarter;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
 
-public class ThermalPowerPlant implements Comparable<ThermalPowerPlant> {
-    private final Integer id;
-    private final String ipAddress;
-    private final Integer port;
+public class ThermalPowerPlant extends PlantInfo {
     private final Window window;
-    private final TreeSet<OtherPlant> otherPlants;
+    private final TreeSet<PlantInfo> otherPlants;
 
-    public ThermalPowerPlant(Integer plantId, String clientAddress, Integer clientPort, String serverAddress, Integer serverPort) throws IdAlreadyExistsException {
-        this.id = plantId;
-        this.ipAddress = clientAddress;
-        this.port = clientPort;
+
+    public ThermalPowerPlant(Integer plantId, String clientAddress, Integer clientPort, String serverAddress, Integer serverPort) throws IdAlreadyExistsException, IOException, InterruptedException {
+        super(plantId, clientAddress, clientPort);
         otherPlants = new TreeSet<>(new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()); // prova a registrare la nuova centrale sul server
-        //TODO segnalare ad altre centrali
+
+        // avvia server Grpc
+        new GrpcServerStarter(this).startPresentationServer();
+        new GrpcServerStarter(this).startElectionServer();
+        new ThermalPlantPresenter(this, serverAddress, serverPort).presentToOtherPlants();
+
         this.window = new Window(this, 8, (float) 0.5);
         (new PollutionSensor(window)).start(); // avvia il simulatore di inquinamento
     }
 
-    public ThermalPowerPlant(Integer id, Integer port) throws IdAlreadyExistsException {
+    public ThermalPowerPlant(Integer id, Integer port) throws IdAlreadyExistsException, IOException, InterruptedException {
         this(id, "localhost", port, "localhost", 8080);
     }
 
-    public synchronized Integer getPort() {
-        return port;
-    }
-
-    public synchronized Integer getId() {
-        return id;
-    }
-
-    public synchronized String getIpAddress() {
-        return ipAddress;
-    }
-
-    public synchronized Set<OtherPlant> getOtherPlants() {
+    public synchronized Set<PlantInfo> getOtherPlants() {
         return otherPlants;
     }
 
-    public synchronized boolean addOtherPlant(OtherPlant otherPlant) {
+    public synchronized boolean addColleaguePlant(PlantInfo otherPlant) {
+        System.out.println("Aggiunta centrale " + otherPlant);
         return otherPlants.add(otherPlant);
     }
 
-    public synchronized OtherPlant getPlantAsOtherPlant() {
-        return new OtherPlant(id, ipAddress, port);
-    }
-
-    @Override
-    public int compareTo(ThermalPowerPlant o) {
-        return this.id.compareTo(o.id);
-    }
 }

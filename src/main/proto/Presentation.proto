@@ -2,20 +2,16 @@ syntax = "proto3";
 
 package ThermalPowerPlantPackage;
 
-// Service for thermal power plants to introduce themselves to each other.
 service PresentationService {
-  // Unary RPC to allow a power plant to introduce itself to another.
   rpc Introduce (IntroductionRequest) returns (IntroductionResponse);
 }
 
-// Message containing the introduction details of a power plant.
 message IntroductionRequest {
-  int32 id = 1;      // Unique identifier of the power plant
-  string ip = 2;     // IP address of the power plant (always localhost in your case)
-  int32  port = 3;    // Communication port of the power plant's gRPC server
+  int32 id = 1; // ID centrale
+  string ip = 2;
+  int32  port = 3;
 }
 
-// Acknowledgment message returned after a successful introduction.
 message IntroductionResponse {
-  bool success = 1;     // True if the introduction was successful, false otherwise
+  bool success = 1;
 }

@@ -36,7 +36,7 @@ class MeasuresPublisher implements Runnable {
         client.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable throwable) {
-                System.out.println(clientId + " Connection lost! cause:" + throwable.getMessage());
+                System.out.println("PLANT" + plantId + " Connection lost! cause:" + throwable.getMessage());
             }
 
             @Override
@@ -46,7 +46,7 @@ class MeasuresPublisher implements Runnable {
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-                System.out.println(clientId + " Message delivered - Thread PID: " + Thread.currentThread().getId());
+                System.out.println("PLANT" + plantId + " Message delivered - Thread PID: " + Thread.currentThread().getId());
             }
         });
         System.out.println(clientId + " connected - Thread PID: " + Thread.currentThread().getId());
@@ -56,7 +56,7 @@ class MeasuresPublisher implements Runnable {
         MqttMessage message = new MqttMessage(payload);
         message.setQos(qos);
         client.publish(topic, message);
-        System.out.println(clientId + " Message " + message + " on topic " + topic + " - Thread PID: " + Thread.currentThread().getId());
+        System.out.println("PLANT" + plantId + " Message " + message + " on topic " + topic + " - Thread PID: " + Thread.currentThread().getId());
     }
 
     /**

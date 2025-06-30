@@ -1,30 +1,59 @@
 package ThermalPowerPlantPackage.gRPC;
 
+import ThermalPowerPlantPackage.EnergyRequestReceiver;
 import ThermalPowerPlantPackage.ThermalPowerPlant;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-class GrpcServerStarter {
+
+/**
+ * Avvia i 2 server gRPC:
+ * 1. Server per la ricezione di riferimenti da altre centrali
+ * 2. Server di gestione delle elezioni per le forniture di energia
+ */
+public class GrpcServerStarter {
     private final ThermalPowerPlant mainPlant;
 
-    GrpcServerStarter(ThermalPowerPlant mainPlant) {
+    public GrpcServerStarter(ThermalPowerPlant mainPlant) {
         this.mainPlant = mainPlant;
     }
 
-    void startPresentationServer() throws IOException, InterruptedException {
-        Server introServer = ServerBuilder.forPort(8000).addService(new PresentationServiceImpl(mainPlant)).build();
+    public void startPresentationServer() throws IOException, InterruptedException {
+        Server introServer = ServerBuilder.forPort(mainPlant.getPort()).addService(new PresentationServiceImpl(mainPlant)).build();
         introServer.start();
         System.out.println("Presentation server started, listening on " + introServer.getPort());
-        introServer.awaitTermination();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (introServer != null) {
+                    introServer.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace(System.err);
+            }
+        }));
     }
 
-    void startElectionServer() throws IOException, InterruptedException {
-        Server electionServer = ServerBuilder.forPort(9000).addService(new ElectionServiceImpl(mainPlant)).build();
+    public void startElectionServer() throws IOException, InterruptedException {
+        ElectionServiceImpl electionService = new ElectionServiceImpl(mainPlant);
+        Server electionServer = ServerBuilder.forPort(mainPlant.getPort()+1).addService(electionService).build();
         electionServer.start();
+        new Thread(new EnergyRequestReceiver(electionService)).start();
         System.out.println("Election server started, listening on " + electionServer.getPort());
-        electionServer.awaitTermination();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (electionServer != null) {
+                    electionServer.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace(System.err);
+            }
+        }));
+
     }
 
 }
