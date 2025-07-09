@@ -17,7 +17,9 @@ public class ThermalPowerPlant extends PlantInfo {
 
     public ThermalPowerPlant(Integer plantId, String clientAddress, Integer clientPort, String serverAddress, Integer serverPort) throws IdAlreadyExistsException, IOException, InterruptedException {
         super(plantId, clientAddress, clientPort);
-        otherPlants = new TreeSet<>(new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()); // prova a registrare la nuova centrale sul server
+        otherPlants = new TreeSet<>(
+                new ThermalPlantPresenter(this, serverAddress, serverPort).publishPlant()
+        ); // prova a registrare la nuova centrale sul server
 
         // avvia server Grpc
         new GrpcServerStarter(this).startPresentationServer();
@@ -25,20 +27,29 @@ public class ThermalPowerPlant extends PlantInfo {
         new ThermalPlantPresenter(this, serverAddress, serverPort).presentToOtherPlants();
 
         this.window = new Window(this, 8, (float) 0.5);
-        (new PollutionSensor(window)).start(); // avvia il simulatore di inquinamento
+        new PollutionSensor(window).start(); // avvia il simulatore di inquinamento
     }
 
     public ThermalPowerPlant(Integer id, Integer port) throws IdAlreadyExistsException, IOException, InterruptedException {
         this(id, "localhost", port, "localhost", 8080);
     }
 
-    public synchronized Set<PlantInfo> getOtherPlants() {
-        return otherPlants;
+    public Set<PlantInfo> getOtherPlants() {
+        synchronized (otherPlants) {
+            return otherPlants;
+        }
     }
 
-    public synchronized boolean addColleaguePlant(PlantInfo otherPlant) {
-        System.out.println("Aggiunta centrale " + otherPlant);
-        return otherPlants.add(otherPlant);
+    public boolean addColleaguePlant(PlantInfo otherPlant) {
+        boolean outcome;
+        synchronized (otherPlants) {
+            outcome = otherPlants.add(otherPlant);
+        }
+        if (outcome) {
+            System.out.println("Aggiunta centrale " + otherPlant);
+            return true;
+        }
+        return false;
     }
 
 }

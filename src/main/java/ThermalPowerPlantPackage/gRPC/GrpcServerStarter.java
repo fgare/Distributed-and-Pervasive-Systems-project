@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class GrpcServerStarter {
     private final ThermalPowerPlant mainPlant;
+    private ElectionServiceImpl electionService;
 
     public GrpcServerStarter(ThermalPowerPlant mainPlant) {
         this.mainPlant = mainPlant;
@@ -38,7 +39,7 @@ public class GrpcServerStarter {
     }
 
     public void startElectionServer() throws IOException, InterruptedException {
-        ElectionServiceImpl electionService = new ElectionServiceImpl(mainPlant);
+        electionService = new ElectionServiceImpl(mainPlant);
         Server electionServer = ServerBuilder.forPort(mainPlant.getPort()+1).addService(electionService).build();
         electionServer.start();
         new Thread(new EnergyRequestReceiver(electionService)).start();

@@ -39,30 +39,31 @@ public class ElectionServiceImpl extends ElectionServiceGrpc.ElectionServiceImpl
             return;
         }
 
+        PlantInfo old = successor;
+
         // determina la centrale successiva nell'anello
         PlantInfo nextplant = otherPlantsList.higher(thisPlant);
         // se questa centrale è l'ultima, il metodo higher() ritorna NULL. Bisogna quindi ripartire dalla prima centrale
         if (nextplant == null) nextplant = otherPlantsList.first();
         this.successor = nextplant;
+        if (old != successor) {
+            channel.shutdown();
+            updateChannel();
+        }
     }
 
-    private void openChannel() {
-        if (successor == null) return;
-
-        // se il canale è già aperto non fa nulla
-        //if (channel != null && !channel.isShutdown() && !channel.isTerminated()) return;
-
+    public void updateChannel() {
         channel = ManagedChannelBuilder
-                .forTarget(successor.getIpAddress() + ":" + (successor.getPort()+1))
+                .forAddress(successor.getIpAddress(), successor.getPort() + 1)
                 .usePlaintext()
                 .build();
-        stub = ElectionServiceGrpc.newStub(channel);
     }
 
     public void startElection(int energykWh) {
-        System.err.println("ELEZIONE INIZIATA CENTRALE "+ thisPlant.getId());
         myprice = (float) (0.1 + new Random().nextFloat()*0.8);
 
+        System.err.println("ELEZIONE INIZIATA CENTRALE "+ thisPlant.getId());
+        
         ElectionRequestOuterClass.ElectionRequest request = ElectionRequestOuterClass.ElectionRequest
                     .newBuilder()
                     .setStatus(ElectionRequestOuterClass.ElectionRequest.Status.ELECTION)
@@ -72,120 +73,130 @@ public class ElectionServiceImpl extends ElectionServiceGrpc.ElectionServiceImpl
                     .setQuantity(energykWh)
                     .build();
 
-        forwardToNext(request, newResponseObserver());
+        updateSuccessor();
+        if (successor == null) {
+            provideEnergy(request);
+            return;
+        }
+
+        forwardToNext(request);
     }
 
     private StreamObserver<ElectionRequestOuterClass.ElectionResponse> newResponseObserver() {
         return new StreamObserver<ElectionRequestOuterClass.ElectionResponse>() {
             @Override
             public void onNext(ElectionRequestOuterClass.ElectionResponse value) {
-                System.err.println("Comunicazione riuscita");
+                System.err.println("Esito comunicazione " + value.getSuccess() + " con " + successor.getId());
             }
 
             @Override
             public void onError(Throwable t) {
-
+                System.err.println("Errore nell'inoltro a " + successor.getId() + ": " + t.getMessage());
             }
 
             @Override
             public void onCompleted() {
-
+                System.err.println("Comunicazione con " + successor.getId() + " completata");
             }
         };
     }
 
     @Override
-    public synchronized void handleElection(ElectionRequestOuterClass.ElectionRequest incomingRequest, StreamObserver<ElectionRequestOuterClass.ElectionResponse> responseObserver) {
-        ElectionRequestOuterClass.ElectionRequest newRequest = null;
+    public void handleElection(ElectionRequestOuterClass.ElectionRequest incomingRequest, StreamObserver<ElectionRequestOuterClass.ElectionResponse> responseObserver) {
+        myprice = (float) (0.1 + new Random().nextFloat()*0.8);
+        ElectionRequestOuterClass.ElectionRequest newRequest;
+        System.err.println("CENTRALE "+ thisPlant.getId() +" RICEVE ELEZIONE");
 
-        // se sto fornendo energia non partecipo all'elezione
         if (workingStatus == WorkingStatus.PROVIDING) {
-            forwardToNext(incomingRequest, newResponseObserver());
+            forwardToNext(incomingRequest);
             responseObserver.onNext(ElectionRequestOuterClass.ElectionResponse.newBuilder().setSuccess(true).build());
             responseObserver.onCompleted();
             return;
         }
 
-        switch (incomingRequest.getStatus()) {
-            case ELECTION:
-                boolean iWin = isBetter(incomingRequest.getPrice(), incomingRequest.getWinningId());
-
-                // se il mio prezzo è più alto, inoltro
-                if (incomingRequest.getPrice() < myprice) {
-                    workingStatus = WorkingStatus.PARTICIPANT;
-                    forwardToNext(incomingRequest, responseObserver);
-                    break;
-                } else
-                    // se il mio prezzo è migliore e sono NON PARTECIPANTE, sono io il vincitore temporaneo
-                    if (incomingRequest.getPrice() > myprice && workingStatus == WorkingStatus.FREE) {
+        if (incomingRequest.getStatus() == ElectionRequestOuterClass.ElectionRequest.Status.ELECTION) {
+            // la mia elezione è tornata a me. E' stato deciso un vincitore
+            if (incomingRequest.getStarterId() == thisPlant.getId() && workingStatus == WorkingStatus.PARTICIPANT) {
+                workingStatus = WorkingStatus.FREE;
+                // TODO potrebbe aver vinto l'elezione e dover fornire energia
+                newRequest = ElectionRequestOuterClass.ElectionRequest
+                        .newBuilder()
+                        .setStatus(ElectionRequestOuterClass.ElectionRequest.Status.ELECTED)
+                        .setWinningId(incomingRequest.getWinningId())
+                        .setStarterId(incomingRequest.getStarterId())
+                        .setPrice(incomingRequest.getPrice())
+                        .setQuantity(incomingRequest.getQuantity())
+                        .build();
+                forwardToNext(newRequest);
+            } else
+                // verifico se la mia offerta è migliore, inoltro i miei riferimenti
+                if (iAmBetter(incomingRequest.getPrice(), incomingRequest.getWinningId())) {
+                    // se sono libero mi segno come partecipante e inoltro i miei riferimenti
+                    if (workingStatus == WorkingStatus.FREE) {
                         workingStatus = WorkingStatus.PARTICIPANT;
                         newRequest = ElectionRequestOuterClass.ElectionRequest
                                 .newBuilder()
                                 .setStatus(ElectionRequestOuterClass.ElectionRequest.Status.ELECTION)
-                                .setStarterId(incomingRequest.getStarterId())
                                 .setWinningId(thisPlant.getId())
+                                .setStarterId(incomingRequest.getStarterId())
                                 .setPrice(myprice)
                                 .setQuantity(incomingRequest.getQuantity())
                                 .build();
-                        forwardToNext(newRequest, responseObserver);
-                        break;
-                    } else
-                        // se il mio prezzo è migliore e sono già PARTECIPANTE, ignoro. Significa che sto già partecipando a un'altra elezione
-                        if (incomingRequest.getPrice() > myprice && workingStatus == WorkingStatus.PARTICIPANT) {
-                            break;
-                        }
-
-                // se il prezzo della richiesta non è minore e non è maggiore del mio prezzo, è per forza uguale
-                // confronto gli ID delle centrali, il più alto vince
-                if (incomingRequest.getWinningId() > thisPlant.getId()) {
-                    forwardToNext(incomingRequest, responseObserver);
-                    break;
+                        forwardToNext(newRequest);
+                    } // altrimenti ignoro, interrompo l'altra elezione
+                } else {
+                    // se sono peggio, mi metto partecipante e inoltro solamente
+                    workingStatus = WorkingStatus.PARTICIPANT;
+                    forwardToNext(incomingRequest);
                 }
+        } else {
+            // ELECTED
+            System.err.println("CENTRALE "+ incomingRequest.getWinningId() +" VINCE ELEZIONE");
 
-                // Il mio plant ID è maggiore, ho vinto io. Comunico la vittoria
-                incomingRequest = ElectionRequestOuterClass.ElectionRequest
-                        .newBuilder()
-                        .setStatus(ElectionRequestOuterClass.ElectionRequest.Status.ELECTION)
-                        .setStarterId(incomingRequest.getStarterId())
-                        .setWinningId(thisPlant.getId())
-                        .setPrice(myprice)
-                        .setQuantity(incomingRequest.getQuantity())
-                        .build();
-                workingStatus = WorkingStatus.FREE;
-                forwardToNext(incomingRequest, responseObserver);
-                break;
-
-            case ELECTED:
-                // Status ELECTED e l'ID vincitore non è il mio. Inoltro il messaggio
-                if (incomingRequest.getWinningId() != thisPlant.getId()) {
-                    forwardToNext(incomingRequest, responseObserver);
-                    break;
-                }
-
-                // Status ELECTED e ID è il mio. Inizio la fornitura
-                System.err.println("ELEZIONE VINCE CENTRALE "+ thisPlant.getId());
-                provideEnergy(incomingRequest);
-                break;
+            if (incomingRequest.getWinningId() == thisPlant.getId()) {
+                // ho vinto io
+                System.err.println("Ho vinto io");
+                workingStatus = WorkingStatus.PROVIDING;
+                // TODO fornisco energia
+            } else {
+                forwardToNext(incomingRequest);
+            }
         }
+
+        responseObserver.onNext(ElectionRequestOuterClass.ElectionResponse.newBuilder().setSuccess(true).build());
+        responseObserver.onCompleted();
     }
 
-    private synchronized boolean isBetter(float incomingPrice, int incomingId) {
+    private boolean iAmBetter(float incomingPrice, int incomingId) {
         if (myprice < incomingPrice) return true;
         return myprice == incomingPrice && thisPlant.getId() > incomingId;
     }
 
-    private synchronized void forwardToNext(ElectionRequestOuterClass.ElectionRequest request, StreamObserver<ElectionRequestOuterClass.ElectionResponse> responseObserver) {
+    private void forwardToNext(ElectionRequestOuterClass.ElectionRequest request) {
         updateSuccessor();
+
         try {
-            ManagedChannel channel = ManagedChannelBuilder
+            /*ManagedChannel channel = ManagedChannelBuilder
                     .forAddress(successor.getIpAddress(), successor.getPort() + 1)
                     .usePlaintext()
-                    .build();
+                    .build();*/
             ElectionServiceGrpc.ElectionServiceStub stub = ElectionServiceGrpc.newStub(channel);
-            stub.handleElection(request, newResponseObserver());
-            responseObserver.onNext(ElectionRequestOuterClass.ElectionResponse.newBuilder().setSuccess(true).build());
-            responseObserver.onCompleted();
-            channel.shutdown();
+            stub.handleElection(request, new StreamObserver<ElectionRequestOuterClass.ElectionResponse>() {
+                @Override
+                public void onNext(ElectionRequestOuterClass.ElectionResponse value) {
+                    System.err.println("Esito comunicazione " + value.getSuccess() + " con " + successor.getId());
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    System.err.println("Errore nell'inoltro a " + successor.getId() + ": " + t.getMessage());
+                }
+
+                @Override
+                public void onCompleted() {
+                    System.err.println("Comunicazione con " + successor.getId() + " completata");
+                }
+            });
         } catch (Exception e) {
             System.err.println("Errore nell'inoltro a " + successor.getId() + ": " + e.getMessage());
         }
@@ -195,6 +206,7 @@ public class ElectionServiceImpl extends ElectionServiceGrpc.ElectionServiceImpl
         synchronized (this) {
             workingStatus = WorkingStatus.PROVIDING;
         }
+        System.err.println("CENTRALE "+ thisPlant.getId() +" FORNECE ENERGIA");
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         // resetta il topic MQTT
@@ -205,6 +217,19 @@ public class ElectionServiceImpl extends ElectionServiceGrpc.ElectionServiceImpl
             synchronized (this) {changeWorkingStatus(WorkingStatus.FREE);}
             scheduler.shutdown();
         }, sleepingTime, TimeUnit.MILLISECONDS);
+    }
+
+    private void shutdownChannel(ManagedChannel channel) {
+        new Thread(() -> {
+            channel.shutdown();
+            try {
+                if (!channel.awaitTermination(3, TimeUnit.SECONDS)) {
+                    channel.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                channel.shutdownNow();
+            }
+        }).start();
     }
 
 

@@ -23,3 +23,4 @@ message ElectionResponse {
 service ElectionService {
   rpc handleElection(ElectionRequest) returns (ElectionResponse);
 }
+
