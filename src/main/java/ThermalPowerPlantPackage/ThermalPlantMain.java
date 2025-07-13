@@ -21,13 +21,13 @@ public class ThermalPlantMain {
         plant = scan.nextInt();
 
         // PORT
-        System.out.print("Client connection port >  ");
-        int clientPort;
-        while (!scan.hasNextInt()) {
-            System.err.println("Id must be an integer");
-            scan.next();
-        }
-        clientPort = scan.nextInt();
+//        System.out.print("Client connection port >  ");
+        int clientPort = 5000 + plant*2 - 1;
+//        while (!scan.hasNextInt()) {
+//            System.err.println("Id must be an integer");
+//            scan.next();
+//        }
+//        clientPort = scan.nextInt();
 
         // ADMINISTRATION SERVER
         System.out.print("Server connection port >  ");

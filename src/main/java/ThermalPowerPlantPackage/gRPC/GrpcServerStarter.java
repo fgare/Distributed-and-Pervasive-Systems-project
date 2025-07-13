@@ -1,6 +1,7 @@
 package ThermalPowerPlantPackage.gRPC;
 
 import ThermalPowerPlantPackage.EnergyRequestReceiver;
+import ThermalPowerPlantPackage.PlantInfo;
 import ThermalPowerPlantPackage.ThermalPowerPlant;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -38,11 +39,16 @@ public class GrpcServerStarter {
         }));
     }
 
-    public void startElectionServer() throws IOException, InterruptedException {
-        electionService = new ElectionServiceImpl(mainPlant);
+    public RingClient startElectionServer() throws IOException, InterruptedException {
+        PlantInfo nextPlant = mainPlant.getRingFollowingPlant();
+        RingClient ringClient = new RingClient(mainPlant);
+        electionService = new ElectionServiceImpl(mainPlant, ringClient);
+
         Server electionServer = ServerBuilder.forPort(mainPlant.getPort()+1).addService(electionService).build();
         electionServer.start();
+
         new Thread(new EnergyRequestReceiver(electionService)).start();
+
         System.out.println("Election server started, listening on " + electionServer.getPort());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -55,6 +61,7 @@ public class GrpcServerStarter {
             }
         }));
 
+        return ringClient;
     }
 
 }
